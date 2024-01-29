@@ -236,4 +236,63 @@ app.post("/setPublic", async (req, res) => {
   }
 });
 
+app.get('/viewuserdetails', async (req, res) => {
+  try {
+    const { username } = req.query;
+    const collection = db.collection('users');
+    const userData = await collection.find({username}).toArray();
+    if (userData) {
+      res.status(200).json(userData);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user data:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+app.post("/updateProfile", async (req, res) => {
+      const username=req.body.username;
+      const first_name=req.body.first_name;
+      const last_name=req.body.last_name;
+      const about_me=req.body.about_me;
+      const hobby=req.body.hobby;
+      const skills=req.body.skills;
+      const avatar=req.body.avatar;
+  try {
+    const data = await db
+      .collection('users')
+      .findOne({username:username});
+
+    if (!data) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update the donor
+    const updatedData = await db
+      .collection('users')
+      .findOneAndUpdate(
+        { username: username }, // Filter condition
+        {
+          $set: {
+            first_name: first_name,
+            last_name: last_name,
+            about_me: about_me,
+            hobby: hobby,
+            skills: skills,
+            avatar:avatar,
+          }
+        },
+        { returnOriginal: false }
+      );
+
+    res.json({ message: "Updated successfully", data: updatedData.value });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error updating donor", error: error.message });
+  }
+});
+
 module.exports = app;
